@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from datetime import date, timedelta
 import warnings
+from prophet import Prophet
+from statsmodels.tsa.stattools import adfuller
 warnings.filterwarnings('ignore')
 
 # Page Title ___________________________________________________________
@@ -77,3 +79,75 @@ st.pyplot(fig, use_container_width=True)
 
 
 # Stationarity Check___________________________________________________________
+st.markdown("---")
+st.header("Stationarity Check")
+
+col_left, col_right = st.columns([4,1])
+
+with col_left:
+    rolling_mean = df['Price'].rolling(window=30).mean()
+    rolling_std = df['Price'].rolling(window=30).std()
+    
+    fig2, ax2 = plt.subplots(figsize=(12,5))
+    ax2.plot(df.index, df['Price'], color='steelblue', label="Price", linewidth=1.5)
+    ax2.plot(rolling_mean, color='orange', label="Rolling Mean(30-day)", linewidth=1.8)
+    ax2.plot(rolling_std, color='red', label="Rolling std(30-day)", linewidth=1.5)
+    ax2.set_title('Rolling Mean and Standard Deviation (30-day window)', fontsize=14)
+    ax2.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+    ax2.xaxis.set_major_locator(mdates.MonthLocator(interval=6))
+    ax2.legend()
+    ax2.grid(True, alpha=0.3)
+    plt.tight_layout()
+    st.pyplot(fig2, use_container_width=True)
+    
+
+
+with col_right:
+    adf_result = adfuller(df["Price"].dropna())
+    
+    p_value = adf_result[1]
+    
+    st.metric("p-value", f"{p_value:.4f}")
+    
+    if p_value < 0.05:
+        st.success("Series is a stationary (p < 0.05).")
+    else:
+        st.warning("Series is a non-stationary (p>=0.05).")
+        
+
+# Using Prophet model___________________________________________________________
+st.markdown("---")
+st.header(f"Prophet Forecast - Next {horizon} days")
+
+df_prophet = df['Price'].reset_index()
+df_prophet.columns = ['ds', 'y']
+df_prophet['ds'] = pd.to_datetime(df_prophet['ds'])
+
+with st.spinner("Fitting Prophet Model ..."):
+    model = Prophet(weekly_seasonality=True, yearly_seasonality=True,daily_seasonality=False)
+    model.fit(df_prophet)
+
+    future = model.make_future_dataframe(periods=horizon, freq='B')
+    forecast = model.predict(future)
+
+
+prophet_pred = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail(horizon)
+prophet_pred = prophet_pred.set_index('ds') 
+
+fig3, ax3 = plt.subplots(figsize=(12,4))
+ax3.plot(df_prophet['ds'], df_prophet['y'], label='Stock History', color='steelblue', linewidth=1.5)
+ax3.plot(prophet_pred.index, prophet_pred['yhat'], label='Prophet Forecast', color='seagreen', linewidth=2, linestyle='--')
+ax3.fill_between(
+    prophet_pred.index,
+    prophet_pred['yhat_lower'],
+    prophet_pred['yhat_upper'],
+    alpha=0.2, color='seagreen', label='95% Uncertainty Interval'
+)
+ax3.set_title(f'{ticker} - {horizon} day forecast', fontsize=14)
+ax3.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+ax3.xaxis.set_major_locator(mdates.MonthLocator(interval=6))
+ax3.legend()
+ax3.grid(True, alpha=0.3)
+plt.tight_layout()
+st.pyplot(fig3, use_container_width=True)
+
