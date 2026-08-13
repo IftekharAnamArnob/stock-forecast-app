@@ -69,7 +69,7 @@ col4.metric("Trading days", f"{len(df)}")
 
 fig, ax = plt.subplots(figsize=(12,4))
 ax.plot(df.index, df['Price'], color='steelblue', linewidth=1.5)
-ax.set_title(f"{ticker} Stock Price", fontsize=14)
+ax.set_title(f"{ticker} Historical Stock Price", fontsize=14)
 ax.set_ylabel(f"Price (USD)")
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
 ax.xaxis.set_major_locator(mdates.MonthLocator(interval=6))
@@ -100,8 +100,6 @@ with col_left:
     plt.tight_layout()
     st.pyplot(fig2, use_container_width=True)
     
-
-
 with col_right:
     adf_result = adfuller(df["Price"].dropna())
     
@@ -115,39 +113,66 @@ with col_right:
         st.warning("Series is a non-stationary (p>=0.05).")
         
 
-# Using Prophet model___________________________________________________________
+# Using Prophet model for forecasting___________________________________________________________
 st.markdown("---")
 st.header(f"Prophet Forecast - Next {horizon} days")
 
-df_prophet = df['Price'].reset_index()
-df_prophet.columns = ['ds', 'y']
-df_prophet['ds'] = pd.to_datetime(df_prophet['ds'])
+try:
+    df_prophet = df['Price'].reset_index()
+    df_prophet.columns = ['ds', 'y']
+    df_prophet['ds'] = pd.to_datetime(df_prophet['ds'])
 
-with st.spinner("Fitting Prophet Model ..."):
-    model = Prophet(weekly_seasonality=True, yearly_seasonality=True,daily_seasonality=False)
-    model.fit(df_prophet)
+    with st.spinner("Fitting Prophet Model ..."):
+        model = Prophet(weekly_seasonality=True, yearly_seasonality=True,daily_seasonality=False)
+        model.fit(df_prophet)
 
-    future = model.make_future_dataframe(periods=horizon, freq='B')
-    forecast = model.predict(future)
+        future = model.make_future_dataframe(periods=horizon, freq='B')
+        forecast = model.predict(future)
 
 
-prophet_pred = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail(horizon)
-prophet_pred = prophet_pred.set_index('ds') 
+    prophet_pred = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].tail(horizon)
 
-fig3, ax3 = plt.subplots(figsize=(12,4))
-ax3.plot(df_prophet['ds'], df_prophet['y'], label='Stock History', color='steelblue', linewidth=1.5)
-ax3.plot(prophet_pred.index, prophet_pred['yhat'], label='Prophet Forecast', color='seagreen', linewidth=2, linestyle='--')
-ax3.fill_between(
-    prophet_pred.index,
-    prophet_pred['yhat_lower'],
-    prophet_pred['yhat_upper'],
-    alpha=0.2, color='seagreen', label='95% Uncertainty Interval'
-)
-ax3.set_title(f'{ticker} - {horizon} day forecast', fontsize=14)
-ax3.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-ax3.xaxis.set_major_locator(mdates.MonthLocator(interval=6))
-ax3.legend()
-ax3.grid(True, alpha=0.3)
-plt.tight_layout()
-st.pyplot(fig3, use_container_width=True)
 
+    fig3, ax3 = plt.subplots(figsize=(12,4))
+    ax3.plot(df_prophet['ds'], df_prophet['y'], label='Stock History', color='steelblue', linewidth=1.5)
+    ax3.plot(prophet_pred['ds'], prophet_pred['yhat'], label='Prophet Forecast', color='seagreen', linewidth=2, linestyle='--')
+    ax3.fill_between(
+        prophet_pred['ds'],
+        prophet_pred['yhat_lower'],
+        prophet_pred['yhat_upper'],
+        alpha=0.2, color='seagreen', label='95% Uncertainty Interval'
+    )
+    ax3.set_title(f'{ticker} Price Forecast — Next {horizon} Days',fontsize=14)
+    ax3.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+    ax3.xaxis.set_major_locator(mdates.MonthLocator(interval=6))
+    ax3.legend()
+    ax3.grid(True, alpha=0.3)
+    plt.tight_layout()
+    st.pyplot(fig3, use_container_width=True)
+
+    st.markdown("---")
+
+    csv = (
+        prophet_pred
+        .rename(columns={
+            'ds': 'Date',
+            'yhat': 'Forecast',
+            'yhat_lower': 'Lower Bound',
+            'yhat_upper': 'Upper Bound'
+        })
+        .to_csv(index=False)
+        .encode('utf-8')
+    )
+
+    st.download_button(
+        "Download Forecast CSV",
+        csv,
+        f"{ticker}_forecast.csv",
+        "text/csv",
+        type="tertiary"
+    )
+
+except ImportError:
+    st.error("Please install Prophet.")   
+     
+    
