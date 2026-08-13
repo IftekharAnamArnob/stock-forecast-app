@@ -18,7 +18,7 @@ The Streamlit application allows users to:
 - Visualize forecasted prices with an uncertainty interval
 - Download forecast results as a CSV file
 
-The application uses the **closing price (`Close`)** as the forecasting target. fileciteturn1file0L40-L58
+The application uses the **closing price (`Close`)** as the forecasting target. 
 
 ## 📈 Supported Stocks
 
@@ -35,7 +35,7 @@ The application currently supports:
 | `NFLX` | Netflix |
 | `NVDA` | NVIDIA |
 
-These stocks are available through the application's sidebar selector. fileciteturn1file0L20-L36
+These stocks are available through the application's sidebar selector. 
 
 ## 🛠️ Technologies Used
 
@@ -50,9 +50,9 @@ These stocks are available through the application's sidebar selector. fileci
 
 ## 📊 Data Collection
 
-Historical stock data is downloaded dynamically using `yfinance` according to the user's selected stock and date range. The application retains only the `Close` column and renames it to `Price`. fileciteturn1file0L40-L54
+Historical stock data is downloaded dynamically using `yfinance` according to the user's selected stock and date range. The application retains only the `Close` column and renames it to `Price`. 
 
-The application also requires at least **60 trading days** of data before continuing. fileciteturn1file0L57-L59
+The application also requires at least **60 trading days** of data before continuing. 
 
 ## 📋 Stock Overview
 
@@ -63,7 +63,7 @@ The application displays four key metrics:
 - **Period Low**
 - **Trading Days**
 
-It also provides a historical stock-price chart for the selected period. fileciteturn1file0L61-L80
+It also provides a historical stock-price chart for the selected period. 
 
 ## 📉 Stationarity Check
 
@@ -76,7 +76,7 @@ A **30-day rolling window** is used to calculate and visualize:
 - Rolling Mean
 - Rolling Standard Deviation
 
-alongside the original stock-price series. fileciteturn1file0L83-L103
+alongside the original stock-price series.
 
 ### Augmented Dickey-Fuller Test
 
@@ -85,7 +85,7 @@ The application performs the **Augmented Dickey-Fuller (ADF) test** on the closi
 The application's interpretation is:
 
 - **p-value < 0.05** → Series is considered stationary
-- **p-value ≥ 0.05** → Series is considered non-stationary fileciteturn1file0L105-L115
+- **p-value ≥ 0.05** → Series is considered non-stationary 
 
 ## 📈 Forecast Visualization
 
@@ -95,9 +95,9 @@ The forecast chart displays:
 - Prophet's predicted price (`yhat`)
 - A **95% uncertainty interval** using the lower and upper forecast bounds
 
-The uncertainty interval is displayed as a shaded area around the forecast. fileciteturn1file0L138-L153
+The uncertainty interval is displayed as a shaded area around the forecast. 
 
-The forecast horizon can be selected from **7 to 120 days**, in increments of 7 days. fileciteturn1file0L40-L42
+The forecast horizon can be selected from **7 to 120 days**, in increments of 7 days. 
 
 ## ⬇️ Download Forecast
 
@@ -118,7 +118,7 @@ The filename is generated using the selected stock ticker, for example:
 AAPL_forecast.csv
 ```
 
-The export functionality is implemented directly in the Streamlit application. fileciteturn1file0L155-L174
+The export functionality is implemented directly in the Streamlit application. 
 
 ## 🖥️ Project Structure
 
