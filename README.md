@@ -149,6 +149,7 @@ pip install -r requirements.txt
 
 ```bash
 streamlit run app.py
+```
 
 Streamlit will start a local server and open the application in your browser.
 
