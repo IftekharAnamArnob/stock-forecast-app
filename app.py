@@ -20,19 +20,21 @@ st.markdown("---")
 # Sidebar ___________________________________________________________
 st.sidebar.header("Settings")
 
+STOCK_NAMES = {
+    "AAPL": "Apple (AAPL)",
+    "GOOGL": "Google (GOOGL)",
+    "MSFT": "Microsoft (MSFT)",
+    "TSLA": "Tesla (TSLA)",
+    "AMZN": "Amazon (AMZN)",
+    "META": "Meta (META)",
+    "NFLX": "Netflix (NFLX)",
+    "NVDA": "NVIDIA (NVDA)"
+}
+
 ticker = st.sidebar.selectbox(
     "Select Stock",
-    options=["AAPL", "GOOGL", "MSFT", "TSLA", "AMZN", "META", "NFLX", "NVDA"],
-    format_func = lambda x: {
-        "AAPL" : "Apple (AAPL)",
-        "GOOGL": "Google (GOOGL)",
-        "MSFT" : "Microsoft (MSFT)",
-        "TSLA" : "Tesla (TSLA)",
-        "AMZN" : "Amazon (AMZN)",
-        "META" : "Meta (META)",
-        "NFLX" : "Netflix (NFLX)",
-        "NVDA" : "NVIDIA (NVDA)"
-    }[x]
+    options=list(STOCK_NAMES.keys()),
+    format_func=lambda x: STOCK_NAMES[x]
 )
 
 start_date = st.sidebar.date_input("Start Date", value=date.today() - timedelta(days=5*365))
@@ -69,8 +71,8 @@ col4.metric("Trading days", f"{len(df)}")
 
 fig, ax = plt.subplots(figsize=(12,4))
 ax.plot(df.index, df['Price'], color='steelblue', linewidth=1.5)
-ax.set_title(f"{ticker} Historical Stock Price", fontsize=14)
-ax.set_ylabel(f"Price (USD)")
+ax.set_title(f"{STOCK_NAMES.get(ticker, ticker)} Historical Stock Price", fontsize=14)
+ax.set_ylabel("Price (USD)")
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
 ax.xaxis.set_major_locator(mdates.MonthLocator(interval=6))
 ax.grid(True, alpha=0.3)
@@ -142,7 +144,7 @@ try:
         prophet_pred['yhat_upper'],
         alpha=0.2, color='seagreen', label='95% Uncertainty Interval'
     )
-    ax3.set_title(f'{ticker} Price Forecast — Next {horizon} Days',fontsize=14)
+    ax3.set_title(f"{STOCK_NAMES.get(ticker, ticker)} Price Forecast — Next {horizon} Days", fontsize=14)
     ax3.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
     ax3.xaxis.set_major_locator(mdates.MonthLocator(interval=6))
     ax3.legend()
@@ -173,6 +175,5 @@ try:
     )
 
 except ImportError:
-    st.error("Please install Prophet.")   
-     
-    
+    st.error("Please install Prophet.")
+
